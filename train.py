@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='TextCNN text classifier')
 parser.add_argument('-lr', type=float, default=0.001, help='学习率')
 parser.add_argument('-batch-size', type=int, default=32)  #128
 parser.add_argument('-epoch', type=int, default=20)
-parser.add_argument('-filter-num', type=int, default=30, help='卷积核的个数') #100
+parser.add_argument('-filter-num', type=int, default=50, help='卷积核的个数') #100
 parser.add_argument('-filter-sizes', type=str, default='3,4,5', help='不同卷积核大小')
 parser.add_argument('-embedding-dim', type=int, default=128, help='词向量的维度')
 parser.add_argument('-dropout', type=float, default=0.5)
