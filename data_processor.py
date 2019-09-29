@@ -21,6 +21,7 @@ def get_stop_words():
 
 def load_data(args):
     print('加载数据中...')
+    print(args.label_num)
     stop_words = get_stop_words() # 加载停用词表
     '''
     如果需要设置文本的长度，则设置fix_length,否则torchtext自动将文本长度处理为最大样本长度
@@ -30,32 +31,32 @@ def load_data(args):
     label = data.Field(sequential=False)
 
     text.tokenize = tokenizer
-    train, val, test = data.TabularDataset.splits(
+    train, val = data.TabularDataset.splits(
             path='data/',
             skip_header=True,
             train='train.tsv',
             validation='validation.tsv',
-            test='test.tsv',
+            # test='test.tsv',
             format='tsv',
-            fields=[('id', id), ('text', text), ('label', label)],
+            fields=[('id', None), ('text', text), ('label', label)],
     )
 
     if args.static:
-        text.build_vocab(train, val, test, vectors=Vectors(name="data/eco_article.vector")) # 此处改为你自己的词向量
+        text.build_vocab(train, val, vectors=Vectors(name="data/eco_article.vector")) # 此处改为你自己的词向量
         args.embedding_dim = text.vocab.vectors.size()[-1]
         args.vectors = text.vocab.vectors
 
-    else: text.build_vocab(train, val, test)
+    else: text.build_vocab(train, val)
 
-    label.build_vocab(train, val, test)
+    label.build_vocab(train, val)
 
-    train_iter, val_iter, test_iter = data.Iterator.splits(
-            (train, val, test),
+    train_iter, val_iter = data.Iterator.splits(
+            (train, val),
             sort_key=lambda x: len(x.text),
             batch_sizes=(args.batch_size, len(val)), # 训练集设置batch_size,验证集整个集合用于测试
             device=-1
     )
     args.vocab_size = len(text.vocab)
     args.label_num = len(label.vocab)
-    return train_iter, val_iter, test_iter
-
+    print(args.label_num)
+    return train_iter, val_iter
