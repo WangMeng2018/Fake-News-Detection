@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import torch
+import numpy as np
 import torch.nn.functional as F
 import data_processor
 from model import TextCNN
@@ -35,16 +36,22 @@ def predict(args):
     model = TextCNN(args)
     if args.cuda: model.cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    model.load_state_dict(torch.load("/home/trec6/wangmeng/FND/model_dir/best_steps_3300.pt"))
+    model.load_state_dict(torch.load("./model_dir/best_steps.pt"))
     model.eval()
 
     for batch in test_iter:
-        feature, text_id = batch.text, batch.id
+        feature = batch.text
         feature = feature.data.t()
-        print(text_id, feature)
+        print(feature)
         if args.cuda:
-            feature, text_id = feature.cuda(), text_id.cuda()
+            feature = feature.cuda()
         logits = model(feature)
-        print(logits)
+        print(type(logits),logits.size(), logits)
+        max_value, max_index = torch.max(logits, dim=1)
+        print(type(max_value), max_value)
+        print(type(max_index), max_index)
+        print(max_index.numpy())
+        result = max_index.numpy()
+        np.savetxt("result.txt", result, fmt='%d', delimiter=",")
 
 predict(args)

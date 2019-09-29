@@ -28,9 +28,11 @@ parser.add_argument('-save-dir', type=str, default='model_dir', help='存储训�
 args = parser.parse_args()
 print("成功加载配置信息")
 
+train_iter, dev_iter, test_iter = data_processor.load_data(args) # 将数据分为训练集和验证集
+print('加载数据完成')
+
+
 def train(args):
-    train_iter, dev_iter = data_processor.load_data(args) # 将数据分为训练集和验证集
-    print('加载数据完成')
     model = TextCNN(args)
     if args.cuda: model.cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -73,7 +75,8 @@ def train(args):
                 else:
                     if steps - last_step >= args.early_stopping:
                         print('\nearly stop by {} steps, acc: {:.4f}%'.format(args.early_stopping, best_acc))
-                        raise KeyboardInterrupt
+                        # raise KeyboardInterrupt
+                        return
 
 '''
 对验证集进行测试 
@@ -100,11 +103,29 @@ def eval(data_iter, model, args):
                                                                        size))
     return accuracy
 
+def predict(args):
+    model = TextCNN(args)
+    if args.cuda: model.cuda()
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    model.load_state_dict(torch.load("./model_dir/best_steps.pt"))
+    model.eval()
+
+    for batch in test_iter:
+        feature = batch.text
+        feature = feature.data.t()
+        print(feature)
+        if args.cuda:
+            feature = feature.cuda()
+        logits = model(feature)
+        print(logits)
+
 def save(model, save_dir, save_prefix, steps):
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
     save_prefix = os.path.join(save_dir, save_prefix)
-    save_path = '{}_steps_{}.pt'.format(save_prefix, steps)
+    # save_path = '{}_steps_{}.pt'.format(save_prefix, steps)
+    save_path = '{}_steps.pt'.format(save_prefix)
     torch.save(model.state_dict(), save_path)
 
 train(args)
+predict(args)
