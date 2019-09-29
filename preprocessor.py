@@ -13,7 +13,8 @@ def transform_text(source_path, train_path):
         tmp_str = "".join(tmp_str.strip().split(' '))
         csv_data.loc[i,'text'] = tmp_str
 
-    csv_data.to_csv(train_path, index = False, header = True)    
+    csv_data.to_csv(train_path, index = False, header = True, sep = '\t')
+    print("转换结束！")
 
 #切分训练集和验证集
 def split_text(source_path, train_path, valid_path, valid_num):
@@ -24,18 +25,15 @@ def split_text(source_path, train_path, valid_path, valid_num):
     train_lines = lines[valid_num:]
     f = open(train_path,'w')
     line = lines[0]
-    line = "\t".join(line.strip().split(','))
-    f.write(line + '\n')
+    f.write(line)
     for line in train_lines:
-        line = "\t".join(line.strip().split(','))
-        f.write(line + '\n')
+        f.write(line)
     f.close()        
 
     val_lines = lines[:valid_num]
     f = open(valid_path, 'w')
     for line in val_lines:
-        line = "\t".join(line.strip().split(','))
-        f.write(line + '\n')
+        f.write(line)
     f.close()
 
 def transform_test(source_path, target_path):
@@ -47,11 +45,9 @@ def transform_test(source_path, target_path):
     f.write("id" + '\t' + "text" + '\t' + "label" + '\n')
     for line in lines:
         tmps = line.strip().split(',')
-        tmp_str = tmps[1]
-        tmp_str = "".join(tmp_str.strip().split(' \t\n'))
-        tmps[1] = tmp_str
-        line = "\t".join(tmps)
-        f.write(line + '\t' + "0" + '\n')           # 测试集中的默认label是0，没有实际用处
+        tmp_str = "".join(tmps[1:])
+        tmp_str = "".join(tmp_str.strip().split(' '))
+        f.write(tmps[0] + '\t' + tmp_str + '\t' + "0" + '\n')           # 测试集中的默认label是0，没有实际用处
     f.close()
 
 if __name__ == "__main__":
