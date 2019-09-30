@@ -30,7 +30,7 @@ args = parser.parse_args()
 print("成功加载配置信息")
 
 def predict(args):
-    train_iter, dev_iter, test_iter = data_processor.load_data(args) # 将数据分为训练集和验证集
+    train_iter, dev_iter, test_iter, vocab = data_processor.load_data(args) # 将数据分为训练集和验证集
     print('加载测试数据完成')
 
     model = TextCNN(args)
@@ -40,18 +40,21 @@ def predict(args):
     model.eval()
 
     for batch in test_iter:
-        feature = batch.text
+        id, feature = batch.id, batch.text
         feature = feature.data.t()
-        print(feature)
+        test_num = id.data.size()[0]
+        id_list = [vocab.itos[id.data[i]] for i in range(test_num)]
         if args.cuda:
-            feature = feature.cuda()
+            id, feature = id.cuda(), feature.cuda()
         logits = model(feature)
-        print(type(logits),logits.size(), logits)
         max_value, max_index = torch.max(logits, dim=1)
-        print(type(max_value), max_value)
-        print(type(max_index), max_index)
-        print(max_index.numpy())
-        result = max_index.numpy()
-        np.savetxt("result.txt", result, fmt='%d', delimiter=",")
+        result = max_index.numpy().tolist()
+        # np.savetxt("result.txt", result, fmt='%d', delimiter=",")
+
+        f = open("submit.csv","w")    
+        f.write("id" + ',' + "label" + '\n')  
+        for i in range(test_num):
+            f.write(id_list[i] + ',' + str(result[i]) + '\n')
+        f.close()
 
 predict(args)

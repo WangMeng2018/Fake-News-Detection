@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import numpy as np
 import torch
 import torch.nn.functional as F
 import data_processor
@@ -28,7 +29,7 @@ parser.add_argument('-save-dir', type=str, default='model_dir', help='存储训�
 args = parser.parse_args()
 print("成功加载配置信息")
 
-train_iter, dev_iter, test_iter = data_processor.load_data(args) # 将数据分为训练集和验证集
+train_iter, dev_iter, test_iter, vocab = data_processor.load_data(args) # 将数据分为训练集和验证集
 print('加载数据完成')
 
 
@@ -111,13 +112,22 @@ def predict(args):
     model.eval()
 
     for batch in test_iter:
-        feature = batch.text
+        id, feature = batch.id, batch.text
         feature = feature.data.t()
-        print(feature)
+        test_num = id.data.size()[0]
+        id_list = [vocab.itos[id.data[i]] for i in range(test_num)]
         if args.cuda:
-            feature = feature.cuda()
+            id, feature = id.cuda(), feature.cuda()
         logits = model(feature)
-        print(logits)
+        max_value, max_index = torch.max(logits, dim=1)
+        result = max_index.numpy().tolist()
+        # np.savetxt("result.txt", result, fmt='%d', delimiter=",")
+
+        f = open("submit.csv","w")
+        f.write("id" + ',' + "label" + '\n')
+        for i in range(test_num):
+            f.write(id_list[i] + ',' + str(result[i]) + '\n')
+        f.close()
 
 def save(model, save_dir, save_prefix, steps):
     if not os.path.isdir(save_dir):
@@ -127,5 +137,6 @@ def save(model, save_dir, save_prefix, steps):
     save_path = '{}_steps.pt'.format(save_prefix)
     torch.save(model.state_dict(), save_path)
 
-train(args)
-predict(args)
+if __name__ == "__main__":
+    train(args)
+    predict(args)
