@@ -26,7 +26,7 @@ def load_data(args):
     如果需要设置文本的长度，则设置fix_length,否则torchtext自动将文本长度处理为最大样本长度
     text = data.Field(sequential=True, tokenize=tokenizer, fix_length=args.max_len, stop_words=stop_words)
     '''
-    # id = data.Field(sequential=False)
+    id = data.Field(sequential=False)
     text = data.Field(sequential=True, lower=True, tokenize=tokenizer, stop_words=stop_words)
     label = data.Field(sequential=False)
 
@@ -38,7 +38,7 @@ def load_data(args):
             validation='validation.tsv',
             test='test.tsv',
             format='tsv',
-            fields=[('id', None), ('text', text), ('label', label)],
+            fields=[('id', id), ('text', text), ('label', label)],
     )
 
     if args.static:
@@ -48,7 +48,7 @@ def load_data(args):
 
     else: text.build_vocab(train, val, test)
     
-    # id.build_vocab(test)
+    id.build_vocab(train, val, test)
     label.build_vocab(train, val, test)
 
     train_iter, val_iter, test_iter = data.Iterator.splits(
@@ -59,6 +59,7 @@ def load_data(args):
     )
     args.vocab_size = len(text.vocab)
     args.label_num = len(label.vocab)
+    args.id_num = len(id.vocab)
     print(args.label_num, label.vocab)
    
-    return train_iter, val_iter, test_iter
+    return train_iter, val_iter, test_iter, id.vocab
