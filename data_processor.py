@@ -42,7 +42,7 @@ def load_data(args):
     )
 
     if args.static:
-        text.build_vocab(train, val, test, vectors=Vectors(name="data/eco_article.vector")) # 此处改为你自己的词向量
+        text.build_vocab(train, val, test, vectors=Vectors(name="data/sgns.weibo.word")) # 此处改为你自己的词向量
         args.embedding_dim = text.vocab.vectors.size()[-1]
         args.vectors = text.vocab.vectors
 
